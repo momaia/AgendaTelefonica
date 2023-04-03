@@ -1,0 +1,16 @@
+# pastas
+/bin/
+/obj/
+/Debug/
+/Release/
+
+# arquivos
+*.exe
+*.dll
+*.pdb
+*.user
+*.vspscc
+*.vssscc
+*.suo
+*.cache
+*.log
