@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using AgendaTelefonica.Models;
+﻿using AgendaTelefonica.Models;
 using AgendaTelefonica.Services;
+using Microsoft.AspNetCore.Mvc;
 using RabbitMQ.Client;
-using Microsoft.Extensions.Configuration;
-using MongoDB.Bson.IO;
 using System.Text;
-using Newtonsoft.Json;
+using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace AgendaTelefonica.Controllers;
 
@@ -14,17 +12,17 @@ namespace AgendaTelefonica.Controllers;
 public class AgendaController : ControllerBase
 {
     private readonly AgendaService _agendaService;
-    private readonly IConnection _rabbitConnection;
-    private readonly IModel _rabbitChannel;
-    private readonly IConfiguration _configuration;
+    private readonly ConnectionFactory _connectionFactory;
+    private const string ligacoesQueue = "ligacoes";
 
-    public AgendaController(AgendaService agendaService, IConnection rabbitConnection, IConfiguration configuration)
+    public AgendaController(AgendaService agendaService)
     {
         _agendaService = agendaService;
-        _rabbitConnection = rabbitConnection;
-        _rabbitChannel = _rabbitConnection.CreateModel();
-        _configuration = configuration;
-    }        
+        _connectionFactory = new ConnectionFactory()
+        {
+            HostName = "localhost"
+        };
+    }
 
     [HttpGet]
     public async Task<List<Agenda>> ObterLista()
@@ -32,7 +30,7 @@ public class AgendaController : ControllerBase
         var result = await _agendaService.GetAsync();
 
         return result.OrderBy(obj => obj.Nome).ToList();
-    }        
+    }
 
     [HttpGet("ObterPorNome/{nome}")]
     public async Task<ActionResult<List<Agenda>>> ObterListaPorNome(string nome)
@@ -113,35 +111,36 @@ public class AgendaController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("Ligar/{id:length(24)}")]
-    public async Task<IActionResult> PublishMessage(string id, [FromBody] string message)
+    [HttpPost("Ligar")]
+    public async Task<IActionResult> PublishMessage([FromBody] Mensagem mensagem)
     {
-        var contato = await _agendaService.GetAsync(id);
+        var informacoesContato = await _agendaService.GetByPhoneAsync(mensagem.TelefoneContato);
 
-        if (contato is null)
+        if (informacoesContato.Count == 0)
         {
             return NotFound();
         }
 
-        var mensagem = new Mensagem()
+        var ligacao = new Ligacao()
         {
-            Ligacao = message,
-            Contato = contato
+            Contato = informacoesContato.FirstOrDefault(),
+            MensagemLigacao = mensagem.MensagemLigacao,
+            HorarioLigacao = DateTime.Now
         };
 
-        var topic = "topicoLigacao";
-        var exchangeName = _configuration.GetValue<string>("RabbitMQ:ExchangeName");
-        var routingKey = $"{topic}.message";
-        
+        using var connection = _connectionFactory.CreateConnection();
+        using var channel = connection.CreateModel();
 
-        var json = Newtonsoft.Json.JsonConvert.SerializeObject(mensagem);
-        var body = Encoding.UTF8.GetBytes(json);
+        var queueInfo = channel.QueueDeclarePassive(ligacoesQueue);
+        var ligacaoJson = JsonConvert.SerializeObject(ligacao);
+        var ligacaoBytes = Encoding.UTF8.GetBytes(ligacaoJson);
 
-        _rabbitChannel.BasicPublish(exchange: exchangeName,
-                                    routingKey: routingKey,
-                                    basicProperties: null,
-                                    body: body);
+        channel.BasicPublish(
+            exchange: "",
+            routingKey: ligacoesQueue,
+            basicProperties: null,
+            body: ligacaoBytes);
 
-        return Ok();
+        return Accepted();
     }
 }

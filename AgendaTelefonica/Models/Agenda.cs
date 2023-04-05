@@ -24,4 +24,9 @@ public class Agenda
     public string EmailOutro { get; set; } = null!;
     public string Empresa { get; set; } = null!;
     public string Endereço { get; set; } = null!;
+
+    public static implicit operator Agenda(List<Agenda> v)
+    {
+        throw new NotImplementedException();
+    }
 }

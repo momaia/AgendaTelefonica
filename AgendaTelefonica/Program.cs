@@ -1,15 +1,23 @@
 using AgendaTelefonica.Models;
 using AgendaTelefonica.Services;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.Configure<AgendaDatabaseSettings>(
-    builder.Configuration.GetSection("AgendaDatabaseRabbit"));
+    builder.Configuration.GetSection("AgendaDatabase"));
 
 builder.Services.AddSingleton<AgendaService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
