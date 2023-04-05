@@ -1,6 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using AgendaTelefonica.Models;
 using AgendaTelefonica.Services;
+using RabbitMQ.Client;
+using Microsoft.Extensions.Configuration;
+using MongoDB.Bson.IO;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace AgendaTelefonica.Controllers;
 
@@ -9,9 +14,17 @@ namespace AgendaTelefonica.Controllers;
 public class AgendaController : ControllerBase
 {
     private readonly AgendaService _agendaService;
+    private readonly IConnection _rabbitConnection;
+    private readonly IModel _rabbitChannel;
+    private readonly IConfiguration _configuration;
 
-    public AgendaController(AgendaService agendaService) =>
+    public AgendaController(AgendaService agendaService, IConnection rabbitConnection, IConfiguration configuration)
+    {
         _agendaService = agendaService;
+        _rabbitConnection = rabbitConnection;
+        _rabbitChannel = _rabbitConnection.CreateModel();
+        _configuration = configuration;
+    }        
 
     [HttpGet]
     public async Task<List<Agenda>> ObterLista()
@@ -98,5 +111,37 @@ public class AgendaController : ControllerBase
         await _agendaService.RemoveAsync(id);
 
         return NoContent();
+    }
+
+    [HttpPost("Ligar/{id:length(24)}")]
+    public async Task<IActionResult> PublishMessage(string id, [FromBody] string message)
+    {
+        var contato = await _agendaService.GetAsync(id);
+
+        if (contato is null)
+        {
+            return NotFound();
+        }
+
+        var mensagem = new Mensagem()
+        {
+            Ligacao = message,
+            Contato = contato
+        };
+
+        var topic = "topicoLigacao";
+        var exchangeName = _configuration.GetValue<string>("RabbitMQ:ExchangeName");
+        var routingKey = $"{topic}.message";
+        
+
+        var json = Newtonsoft.Json.JsonConvert.SerializeObject(mensagem);
+        var body = Encoding.UTF8.GetBytes(json);
+
+        _rabbitChannel.BasicPublish(exchange: exchangeName,
+                                    routingKey: routingKey,
+                                    basicProperties: null,
+                                    body: body);
+
+        return Ok();
     }
 }

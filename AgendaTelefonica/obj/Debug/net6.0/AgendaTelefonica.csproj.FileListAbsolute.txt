@@ -43,3 +43,5 @@ C:\Workspace\AgendaTelefonica\AgendaTelefonica\AgendaTelefonica\obj\Debug\net6.0
 C:\Workspace\AgendaTelefonica\AgendaTelefonica\AgendaTelefonica\obj\Debug\net6.0\AgendaTelefonica.pdb
 C:\Workspace\AgendaTelefonica\AgendaTelefonica\AgendaTelefonica\obj\Debug\net6.0\AgendaTelefonica.genruntimeconfig.cache
 C:\Workspace\AgendaTelefonica\AgendaTelefonica\AgendaTelefonica\obj\Debug\net6.0\ref\AgendaTelefonica.dll
+C:\Workspace\AgendaTelefonica\AgendaTelefonica\AgendaTelefonica\bin\Debug\net6.0\RabbitMQ.Client.dll
+C:\Workspace\AgendaTelefonica\AgendaTelefonica\AgendaTelefonica\bin\Debug\net6.0\System.Threading.Channels.dll
