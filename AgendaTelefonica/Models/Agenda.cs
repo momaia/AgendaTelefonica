@@ -1,7 +1,7 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
-namespace AgendaTelefonica;
+namespace AgendaTelefonica.Models;
 
 public class Agenda
 {
@@ -12,9 +12,9 @@ public class Agenda
     [BsonElement("Nome")]
     public string Nome { get; set; }
     public string Telefone { get; set; }
-    public string telefoneCasa { get; set; } = null!;
-    public string telefoneTrabalho { get; set; } = null!;
-    public string telefoneOutro { get; set; } = null!;
+    public string TelefoneCasa { get; set; } = null!;
+    public string TelefoneTrabalho { get; set; } = null!;
+    public string TelefoneOutro { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string EmailCasa { get; set; } = null!;
     public string EmailTrabalho { get; set; } = null!;

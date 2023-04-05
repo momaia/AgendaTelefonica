@@ -1,6 +1,13 @@
+using AgendaTelefonica.Models;
+using AgendaTelefonica.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.Configure<AgendaDatabaseSettings>(
+    builder.Configuration.GetSection("AgendaDatabase"));
+
+builder.Services.AddSingleton<AgendaService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
