@@ -60,7 +60,7 @@ public class AgendaController : ControllerBase
         return result.OrderBy(obj => obj.Nome).ToList();
     }
 
-    [HttpPost]
+    [HttpPost("Incluir")]
     public async Task<IActionResult> Post(Agenda novoContato)
     {
         await _agendaService.CreateAsync(novoContato);
@@ -68,7 +68,7 @@ public class AgendaController : ControllerBase
         return CreatedAtAction(nameof(ObterLista), new { id = novoContato.Id }, novoContato);
     }
 
-    [HttpPut("{id:length(24)}")]
+    [HttpPut("Editar/{id:length(24)}")]
     public async Task<IActionResult> Update(string id, Agenda contatoAgenda)
     {
         var contato = await _agendaService.GetAsync(id);
@@ -85,7 +85,7 @@ public class AgendaController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{id:length(24)}")]
+    [HttpDelete("Deletar/{id:length(24)}")]
     public async Task<IActionResult> Delete(string id)
     {
         var contato = await _agendaService.GetAsync(id);
