@@ -1,5 +1,6 @@
 ﻿using AgendaTelefonica.Models;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace AgendaTelefonica.Services;
@@ -30,17 +31,33 @@ public class AgendaService
     public async Task<List<Agenda>> GetByNameAsync(string nome) =>
         await _agendaCollection.Find(x => x.Nome.Contains(nome)).ToListAsync();
 
-    public async Task<List<Agenda>> GetByPhoneAsync(string telefone) =>
-        await _agendaCollection.Find(x => x.Telefone.Contains(telefone) 
-        || x.TelefoneCasa.Contains(telefone)
-        || x.TelefoneTrabalho.Contains(telefone)
-        || x.TelefoneOutro.Contains(telefone)).ToListAsync();
+    public async Task<List<Agenda>> GetByPhoneAsync(string telefone)
+    {
+        var filter = Builders<Agenda>.Filter.Or(
+        Builders<Agenda>.Filter.Regex(x => x.Telefone, new BsonRegularExpression(telefone)),
+        Builders<Agenda>.Filter.Regex(x => x.TelefoneCasa, new BsonRegularExpression(telefone)),
+        Builders<Agenda>.Filter.Regex(x => x.TelefoneTrabalho, new BsonRegularExpression(telefone)),
+        Builders<Agenda>.Filter.Regex(x => x.TelefoneOutro, new BsonRegularExpression(telefone))
+        );
 
-    public async Task<List<Agenda>> GetByEmailAsync(string email) =>
-        await _agendaCollection.Find(x => x.Email.Contains(email)
-        || x.EmailCasa.Contains(email)
-        || x.EmailTrabalho.Contains(email)
-        || x.EmailOutro.Contains(email)).ToListAsync();
+        var result = await _agendaCollection.Find(filter).ToListAsync();
+
+        return result;
+    }    
+
+    public async Task<List<Agenda>> GetByEmailAsync(string email)
+    {
+        var filter = Builders<Agenda>.Filter.Or(
+        Builders<Agenda>.Filter.Regex(x => x.Email, new BsonRegularExpression(email)),
+        Builders<Agenda>.Filter.Regex(x => x.EmailCasa, new BsonRegularExpression(email)),
+        Builders<Agenda>.Filter.Regex(x => x.EmailTrabalho, new BsonRegularExpression(email)),
+        Builders<Agenda>.Filter.Regex(x => x.EmailOutro, new BsonRegularExpression(email))
+        );
+
+        var result = await _agendaCollection.Find(filter).ToListAsync();
+
+        return result;
+    }
 
     public async Task CreateAsync(Agenda novoContato) =>
         await _agendaCollection.InsertOneAsync(novoContato);
